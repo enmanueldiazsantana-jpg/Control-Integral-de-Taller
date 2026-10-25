@@ -1,0 +1,19 @@
+{
+  "name": "Control Integral de Taller",
+  "short_name": "Control Taller",
+  "description": "Control de equipos, órdenes de trabajo, materiales y compras",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8fafd",
+  "theme_color": "#f8f9fa",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
