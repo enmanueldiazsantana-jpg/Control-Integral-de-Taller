@@ -1,5 +1,5 @@
 // Aplicación vanilla. Sin datos inventados ni credenciales incorporadas.
-const CONFIG={appsScriptUrl:"https://script.google.com/macros/s/AKfycbzGhMBjJplVvPScMNUAdhwZciWEkzL3OgYLOwTGgp3o7roWJJ4LcHU5iopdLlHOsim_/exec"};
+const CONFIG={appsScriptUrl:"/.netlify-gs"};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const db={equipos:[],ordenes:[],compras:[],materiales:[],contactos:[]};
 const key="citaller_";
@@ -15,7 +15,21 @@ function status(o,r){let n=pending(o,r).length;return n?`${n} pendiente(s)`:"Com
 function saveLocal(){Object.keys(db).forEach(k=>localStorage.setItem(key+k,JSON.stringify(db[k])));localStorage.setItem(key+"hiddenOTs",JSON.stringify(db.ordenes.filter(x=>x.OcultaLocal).map(x=>x.OT_ID)));localStorage.setItem(key+"hiddenBuys",JSON.stringify(db.compras.filter(x=>x.OcultaLocal).map(x=>x.CompraID)))}
 function applyHiddenFlags(){let ots=[],buys=[];try{ots=JSON.parse(localStorage.getItem(key+"hiddenOTs")||"[]");buys=JSON.parse(localStorage.getItem(key+"hiddenBuys")||"[]")}catch{}db.ordenes.forEach(x=>{if(ots.includes(x.OT_ID))x.OcultaLocal=true});db.compras.forEach(x=>{if(buys.includes(x.CompraID))x.OcultaLocal=true})}
 function loadLocal(){Object.keys(db).forEach(k=>{try{db[k]=JSON.parse(localStorage.getItem(key+k)||"[]")}catch{db[k]=[]}});applyHiddenFlags()}
-async function api(action,record){if(!CONFIG.appsScriptUrl)return null;let r=await fetch(CONFIG.appsScriptUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(record?{action,record}:{action})});let d=await r.json();if(!d.ok)throw Error(d.error||"Error de Google Sheets");return d}
+async function api(action,record){
+  if(!CONFIG.appsScriptUrl) throw new Error("Falta configurar la conexión con Google Apps Script.");
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(),30000);
+  try {
+    const r=await fetch(CONFIG.appsScriptUrl,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(record?{action,record}:{action}),signal:controller.signal});
+    if(!r.ok) throw new Error("La conexión respondió HTTP "+r.status);
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.error||"Error de Google Sheets");
+    return d;
+  } catch(err) {
+    if(err.name==="AbortError") throw new Error("La conexión tardó más de 30 segundos. Intenta actualizar otra vez.");
+    throw new Error("No se pudo comunicar con Google Sheets: "+(err.message||err));
+  } finally { clearTimeout(timeout); }
+}
 async function persist(action,record){if(CONFIG.appsScriptUrl)await api(action,record);saveLocal()}
 function notify(t){$("#toast").textContent=t;$("#toast").classList.add("show");setTimeout(()=>$("#toast").classList.remove("show"),3000)}
 function go(p){$$(".page").forEach(x=>x.classList.toggle("active",x.id===p));$$("nav button").forEach(x=>x.classList.toggle("active",x.dataset.page===p));window.scrollTo({top:0,behavior:"smooth"})}
