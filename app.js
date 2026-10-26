@@ -1,5 +1,5 @@
 // Aplicación vanilla. Sin datos inventados ni credenciales incorporadas.
-const CONFIG={appsScriptUrl:""};
+const CONFIG={appsScriptUrl:"https://script.google.com/macros/s/AKfycbzGhMBjJplVvPScMNUAdhwZciWEkzL3OgYLOwTGgp3o7roWJJ4LcHU5iopdLlHOsim_/exec"};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const db={equipos:[],ordenes:[],compras:[],materiales:[],contactos:[]};
 const key="citaller_";
