@@ -15,7 +15,38 @@ function status(o,r){let n=pending(o,r).length;return n?`${n} pendiente(s)`:"Com
 function saveLocal(){Object.keys(db).forEach(k=>localStorage.setItem(key+k,JSON.stringify(db[k])));localStorage.setItem(key+"hiddenOTs",JSON.stringify(db.ordenes.filter(x=>x.OcultaLocal).map(x=>x.OT_ID)));localStorage.setItem(key+"hiddenBuys",JSON.stringify(db.compras.filter(x=>x.OcultaLocal).map(x=>x.CompraID)))}
 function applyHiddenFlags(){let ots=[],buys=[];try{ots=JSON.parse(localStorage.getItem(key+"hiddenOTs")||"[]");buys=JSON.parse(localStorage.getItem(key+"hiddenBuys")||"[]")}catch{}db.ordenes.forEach(x=>{if(ots.includes(x.OT_ID))x.OcultaLocal=true});db.compras.forEach(x=>{if(buys.includes(x.CompraID))x.OcultaLocal=true})}
 function loadLocal(){Object.keys(db).forEach(k=>{try{db[k]=JSON.parse(localStorage.getItem(key+k)||"[]")}catch{db[k]=[]}});applyHiddenFlags()}
-async function api(action,record){
+async function api(action,record){async function api(action, record) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
+
+  try {
+    const response = await fetch("/api/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify(
+        record ? { action, record } : { action }
+      ),
+      signal: controller.signal
+    });
+
+    const data = await response.json();
+
+    if (!data.ok) {
+      throw new Error(data.error || "Error de Google Sheets");
+    }
+
+    return data;
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("La solicitud tardó demasiado. Intenta nuevamente.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
   if(!CONFIG.appsScriptUrl) throw new Error("Falta configurar la conexión con Google Apps Script.");
   const controller = new AbortController();
   const timeout = setTimeout(()=>controller.abort(),30000);
