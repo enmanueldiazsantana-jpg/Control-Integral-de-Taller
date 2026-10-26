@@ -1,5 +1,5 @@
 // Aplicación vanilla. Sin datos inventados ni credenciales incorporadas.
-const CONFIG={appsScriptUrl:"/.netlify-gs"};
+const CONFIG={appsScriptUrl:"/api/"};
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const db={equipos:[],ordenes:[],compras:[],materiales:[],contactos:[]};
 const key="citaller_";
